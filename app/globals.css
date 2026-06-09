@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #03010a;
+  color: #e8dff5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(8,5,22,0.4); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #d4a843, #7b4fff);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: #f0c040; }
+
+/* Gradient text utility */
+.gradient-gold {
+  background: linear-gradient(155deg, #faeab0 0%, #f0c040 40%, #d4a843 70%, #e8730a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 35px rgba(212,168,67,0.4));
+}
+
+.gradient-gold-soft {
+  background: linear-gradient(135deg, #d4a843, #f0c040);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer button */
+.btn-divine {
+  background: linear-gradient(135deg, #d4a843, #f0c040, #d4a843);
+  background-size: 200% 200%;
+  animation: shimmer 3s ease infinite;
+  box-shadow: 0 0 28px rgba(212,168,67,0.35);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.btn-divine:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 50px rgba(240,192,64,0.7);
+}
+
+/* Fade animations */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-right {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes msg-appear {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 1s forwards; opacity: 0; }
+.animate-fade-in-right { animation: fade-in-right 1.2s forwards; opacity: 0; }
+.animate-msg-appear { animation: msg-appear 0.42s ease forwards; }
+
+body.chat-fullscreen { overflow: hidden; }
