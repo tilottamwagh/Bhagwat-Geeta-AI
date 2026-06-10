@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Cinzel_Decorative, EB_Garamond } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/LanguageContext";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -42,7 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${cinzel.variable} ${cinzelDecorative.variable} ${ebGaramond.variable}`}
     >
-      <body className="font-serif antialiased">{children}</body>
+      <body className="font-serif antialiased">
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

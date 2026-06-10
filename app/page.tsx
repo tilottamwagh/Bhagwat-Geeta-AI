@@ -1,8 +1,14 @@
+"use client";
 import CosmosCanvas from "@/components/CosmosCanvas";
 import Chat from "@/components/Chat";
 import { Nav, Hero, Features, Wisdom, How, Footer } from "@/components/Sections";
+import { useLang } from "@/lib/LanguageContext";
+import t from "@/lib/translations";
 
 export default function Home() {
+  const { lang } = useLang();
+  const tr = t[lang].chatSection;
+
   return (
     <>
       <CosmosCanvas />
@@ -25,14 +31,13 @@ export default function Home() {
           className="py-16 px-4 sm:px-6 flex flex-col items-center gap-6"
         >
           <p className="font-sans text-xs tracking-[0.42em] uppercase text-gold">
-            Divine Dialogue
+            {tr.label}
           </p>
           <h2 className="font-display text-3xl sm:text-4xl text-gold-pale text-center">
-            Ask Shri Krishna
+            {tr.title}
           </h2>
           <p className="text-moonlight/60 italic text-center max-w-xl leading-relaxed">
-            Open your heart. Share what troubles you. The Lord who guided Arjuna
-            on the battlefield of Kurukshetra now guides you on your own.
+            {tr.body}
           </p>
           <Chat />
         </section>

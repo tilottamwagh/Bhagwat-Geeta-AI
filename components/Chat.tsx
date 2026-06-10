@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Send, Maximize2, Minimize2, Trash2, Settings, BookOpen, X,
-} from "lucide-react";
+import { Send, Maximize2, Minimize2, Trash2, BookOpen, X } from "lucide-react";
+import { useLang } from "@/lib/LanguageContext";
+import t from "@/lib/translations";
 
 const KRISHNA_IMG =
   "https://bhagavadgita.com/images/hero/bhagavad-gita-3x4-576x768.webp";
@@ -15,23 +15,7 @@ type Msg = {
   verseRef?: string | null;
 };
 
-const SUGGESTIONS = [
-  "I feel lost in life's purpose",
-  "I'm afraid of failure and judgment",
-  "How do I let go of attachment?",
-  "My relationships are breaking apart",
-];
-
-const WELCOME: Msg = {
-  id: "welcome",
-  who: "krishna",
-  text:
-    "**ॐ नमः।** Dear soul, I am here — as I have always been, dwelling within you as the eternal witness.\n\nYou stand at your own Kurukshetra. Whatever dharma-sankat, confusion, grief, or fear weighs upon your heart — speak it freely. I listened to Arjuna without judgment for 18 chapters; I listen to you the same.\n\n**What troubles your soul today?**",
-  verseRef: "Bhagavad Gita · Chapter 18:65",
-};
-
 function format(text: string) {
-  // very small markdown: **bold**, *italic*, \n\n -> paragraph
   const escaped = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -43,16 +27,27 @@ function format(text: string) {
     .replace(/\n/g, "<br/>");
 }
 
-function detectVerse(t: string): string | null {
+function detectVerse(text: string): string | null {
   const m =
-    t.match(/Chapter\s+\d+[,:]?\s*Verse\s+[\d–\-]+/i) ||
-    t.match(/BG\s+\d+:\d+/i) ||
-    t.match(/Gita\s+\d+\.\d+/i);
+    text.match(/Chapter\s+\d+[,:]?\s*Verse\s+[\d–\-]+/i) ||
+    text.match(/अध्याय\s+\d+[,:]?\s*श्लोक\s+[\d–\-]+/i) ||
+    text.match(/BG\s+\d+:\d+/i) ||
+    text.match(/Gita\s+\d+\.\d+/i);
   return m ? m[0] : null;
 }
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Msg[]>([WELCOME]);
+  const { lang } = useLang();
+  const tr = t[lang].chat;
+
+  const makeWelcome = (): Msg => ({
+    id: "welcome-" + lang,
+    who: "krishna",
+    text: tr.welcome,
+    verseRef: tr.welcomeVerse,
+  });
+
+  const [messages, setMessages] = useState<Msg[]>([makeWelcome()]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -60,6 +55,13 @@ export default function Chat() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset welcome message when language changes
+  useEffect(() => {
+    setMessages([makeWelcome()]);
+    setShowSuggestions(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   useEffect(() => {
     document.body.classList.toggle("chat-fullscreen", fullscreen);
@@ -95,6 +97,7 @@ export default function Chat() {
           message: text,
           sessionId,
           query: text,
+          language: lang,
         }),
       });
       const data = await res.json();
@@ -109,10 +112,7 @@ export default function Chat() {
         reply = data[0].output || data[0].text || data[0].message || JSON.stringify(data[0]);
       else reply = JSON.stringify(data);
 
-      if (!reply?.trim()) {
-        reply =
-          "ॐ ... The divine channel is open, dear one, but no words came through. Please verify the n8n workflow is active.";
-      }
+      if (!reply?.trim()) reply = tr.errorFallback;
 
       setMessages((m) => [
         ...m,
@@ -130,8 +130,8 @@ export default function Chat() {
         {
           id: crypto.randomUUID(),
           who: "krishna",
-          text: `Dear one, a disturbance arose in our connection.\n\n_Error: ${detail}_`,
-          verseRef: "Connection Issue",
+          text: tr.connectionErr.replace("{err}", detail),
+          verseRef: tr.connectionErrTag,
         },
       ]);
     } finally {
@@ -140,7 +140,7 @@ export default function Chat() {
   };
 
   const clear = () => {
-    setMessages([{ ...WELCOME, id: "welcome-" + Date.now() }]);
+    setMessages([makeWelcome()]);
     setShowSuggestions(true);
   };
 
@@ -167,30 +167,26 @@ export default function Chat() {
       {/* TOP BAR */}
       <div className="flex items-center gap-3 px-5 sm:px-8 py-4 border-b border-gold/15 bg-[rgba(3,1,10,0.65)]">
         <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gold shadow-[0_0_22px_rgba(212,168,67,0.45)] flex-shrink-0">
-          <img
-            src={KRISHNA_IMG}
-            alt="Shri Krishna"
-            className="w-full h-full object-cover object-top"
-          />
+          <img src={KRISHNA_IMG} alt="Shri Krishna" className="w-full h-full object-cover object-top" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-sans text-sm sm:text-base font-semibold text-gold-pale truncate">
-            Shri Krishna — The Supreme Guide
+            {tr.topbarName}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-tulsi mt-0.5">
             <span className="w-2 h-2 rounded-full bg-tulsi animate-blink" />
-            <span>Omnipresent · Always listening</span>
+            <span>{tr.status}</span>
           </div>
         </div>
         <div className="flex gap-1.5">
-          <IconBtn onClick={() => setFullscreen((v) => !v)} title="Toggle full-screen">
+          <IconBtn onClick={() => setFullscreen((v) => !v)} title={tr.fullscreenOpen}>
             {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </IconBtn>
-          <IconBtn onClick={clear} title="Clear conversation">
+          <IconBtn onClick={clear} title={tr.clear}>
             <Trash2 size={16} />
           </IconBtn>
           {fullscreen && (
-            <IconBtn onClick={() => setFullscreen(false)} title="Close">
+            <IconBtn onClick={() => setFullscreen(false)} title={tr.close}>
               <X size={16} />
             </IconBtn>
           )}
@@ -208,7 +204,7 @@ export default function Chat() {
       >
         <AnimatePresence initial={false}>
           {messages.map((m) => (
-            <MessageBubble key={m.id} msg={m} fullscreen={fullscreen} />
+            <MessageBubble key={m.id} msg={m} fullscreen={fullscreen} you={tr.you} krishna={tr.krishna} />
           ))}
         </AnimatePresence>
 
@@ -235,7 +231,7 @@ export default function Chat() {
       {/* SUGGESTIONS */}
       {showSuggestions && (
         <div className="px-5 sm:px-8 py-3 border-t border-gold/10 flex gap-2 flex-wrap">
-          {SUGGESTIONS.map((s) => (
+          {tr.suggestions.map((s) => (
             <button
               key={s}
               onClick={() => send(s)}
@@ -258,7 +254,7 @@ export default function Chat() {
             autoResize(e.target);
           }}
           onKeyDown={handleKey}
-          placeholder="Pour your heart out... He is listening 🙏"
+          placeholder={tr.placeholder}
           className="flex-1 px-4 py-3 rounded-lg bg-nebula/80 border border-gold/25 focus:border-gold/55 outline-none text-moonlight font-serif text-base resize-none min-h-[52px] max-h-[160px] placeholder:text-moonlight/30 placeholder:italic transition"
         />
         <button
@@ -274,9 +270,7 @@ export default function Chat() {
   );
 }
 
-function IconBtn({
-  onClick, title, children,
-}: { onClick: () => void; title: string; children: React.ReactNode }) {
+function IconBtn({ onClick, title, children }: { onClick: () => void; title: string; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
@@ -292,11 +286,7 @@ function Avatar({ krishna }: { krishna?: boolean }) {
   if (krishna) {
     return (
       <div className="w-9 h-9 rounded-full overflow-hidden border border-gold/35 flex-shrink-0 mt-0.5 bg-gradient-to-br from-[#0a4a3a] to-[#1a8c6e]">
-        <img
-          src={KRISHNA_IMG}
-          alt=""
-          className="w-full h-full object-cover object-top"
-        />
+        <img src={KRISHNA_IMG} alt="" className="w-full h-full object-cover object-top" />
       </div>
     );
   }
@@ -307,7 +297,14 @@ function Avatar({ krishna }: { krishna?: boolean }) {
   );
 }
 
-function MessageBubble({ msg, fullscreen }: { msg: Msg; fullscreen: boolean }) {
+function MessageBubble({
+  msg, fullscreen, you, krishna,
+}: {
+  msg: Msg;
+  fullscreen: boolean;
+  you: string;
+  krishna: string;
+}) {
   const isUser = msg.who === "user";
   return (
     <motion.div
@@ -325,7 +322,7 @@ function MessageBubble({ msg, fullscreen }: { msg: Msg; fullscreen: boolean }) {
             isUser ? "text-chakra/90 text-right" : "text-gold/80"
           }`}
         >
-          {isUser ? "You" : "Shri Krishna"}
+          {isUser ? you : krishna}
         </div>
         <div
           className={
